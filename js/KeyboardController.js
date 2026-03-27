@@ -1,7 +1,8 @@
 export class KeyboardController {
-  constructor(rotator, soundEngine) {
+  constructor(rotator, soundEngine, clockMode) {
     this.rotator = rotator;
     this.soundEngine = soundEngine;
+    this.clockMode = clockMode;
 
     document.addEventListener('keydown', (e) => this._handleKey(e));
   }
@@ -33,6 +34,13 @@ export class KeyboardController {
         this._toggleFullscreen();
         break;
 
+      case 'c':
+      case 'C':
+      case 'ArrowUp':
+        e.preventDefault();
+        this._toggleClock();
+        break;
+
       case 'm':
       case 'M':
         e.preventDefault();
@@ -50,6 +58,19 @@ export class KeyboardController {
         const overlay = document.querySelector('.shortcuts-overlay');
         if (overlay) overlay.classList.remove('visible');
         break;
+    }
+  }
+
+  _toggleClock() {
+    if (!this.clockMode) return;
+    if (this.clockMode.active) {
+      this.clockMode.stop();
+      this.rotator.start();
+      this._showToast('Quotes');
+    } else {
+      this.rotator.stop();
+      this.clockMode.start();
+      this._showToast('Clock');
     }
   }
 

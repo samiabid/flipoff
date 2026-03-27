@@ -1,143 +1,135 @@
-/* Page Frame — mock browser window */
-.page-frame {
-  max-width: 1280px;
-  margin: 24px auto;
-  background: #F5F5F5;
-  border-radius: 16px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
-  overflow: hidden;
-  min-height: calc(100vh - 48px);
-  display: flex;
-  flex-direction: column;
+/* Page */
+body {
+  background: #111;
 }
 
-/* Header */
-.header {
+/* Control panel — slides down from top on mouse activity */
+.control-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+
+.control-panel.visible {
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+.control-panel-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 36px;
-  height: 60px;
-  flex-shrink: 0;
+  padding: 16px 32px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0) 100%);
+  gap: 16px;
 }
 
-.header-logo {
-  font-size: 20px;
+.cp-logo {
+  font-size: 18px;
   font-weight: 800;
   letter-spacing: -0.3px;
+  color: rgba(255,255,255,0.5);
+  white-space: nowrap;
 }
 
-.header-nav {
+.cp-buttons {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 8px;
 }
 
-.header-nav a {
-  font-size: 14px;
-  font-weight: 500;
-  color: #666;
-  transition: color 0.2s;
-}
-
-.header-nav a:hover {
-  color: #000;
-}
-
-.volume-icon {
+.cp-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: none;
-  color: #666;
-  padding: 4px;
-  transition: color 0.2s;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 50px;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.75);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
 }
 
-.volume-icon:hover {
-  color: #000;
+.cp-btn:hover {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border-color: rgba(255,255,255,0.3);
 }
 
-.volume-icon.muted svg path:last-child,
-.volume-icon.muted svg path:nth-child(2) {
-  display: none;
-}
-
-/* Hero */
-.hero {
-  text-align: center;
-  padding: 56px 24px 44px;
+.cp-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   flex-shrink: 0;
 }
 
-.hero h1 {
-  font-size: 48px;
-  font-weight: 800;
-  letter-spacing: -1.5px;
-  line-height: 1.15;
-  max-width: 650px;
-  margin: 0 auto 14px;
-  color: #111;
+.cp-btn.active {
+  background: rgba(126, 184, 247, 0.2);
+  border-color: rgba(126, 184, 247, 0.5);
+  color: #7eb8f7;
 }
 
-.hero .subtitle {
-  font-size: 16px;
-  color: #888;
-  margin-bottom: 28px;
-  font-weight: 400;
+.cp-btn.muted {
+  background: rgba(247, 126, 126, 0.15);
+  border-color: rgba(247, 126, 126, 0.4);
+  color: #f77e7e;
 }
 
-.hero-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
+.page-frame {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #111;
 }
 
-.hero-cta input {
-  padding: 12px 18px;
-  border: 1.5px solid #E0E0E0;
-  border-radius: 8px;
-  font-size: 14px;
-  background: #fff;
-  width: 220px;
-}
-
-.hero-cta input::placeholder {
-  color: #bbb;
-}
-
-.hero-cta input:focus {
-  border-color: #999;
-}
-
-.hero-cta button {
-  padding: 12px 22px;
-  background: #000;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 8px;
-  white-space: nowrap;
-  transition: background 0.2s;
-}
-
-.hero-cta button:hover {
-  background: #222;
-}
 
 /* Board Section */
 .board-section {
   flex: 1;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   padding: 0 24px 32px;
 }
 
-/* Fullscreen: hide header+hero, board fills viewport */
-.fullscreen-active .header,
-.fullscreen-active .hero {
-  display: none;
+/* Fullscreen */
+:fullscreen body,
+:fullscreen .page-frame {
+  background: #111;
+}
+
+:fullscreen .page-frame {
+  min-height: 100vh;
+}
+
+
+:fullscreen .board-section {
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+  align-items: center;
+  justify-content: center;
+}
+
+:fullscreen .board {
+  border-radius: 0;
+  box-shadow: none;
+  --tile-size: clamp(44px, 4vw, 70px);
 }
 
 .fullscreen-active .board-section {

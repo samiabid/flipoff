@@ -4,14 +4,19 @@ export class SoundEngine {
   constructor() {
     this.ctx = null;
     this.muted = false;
+    this.volume = 0.8;
     this._initialized = false;
     this._audioBuffer = null;
     this._currentSource = null;
+    this._masterGain = null;
   }
 
   async init() {
     if (this._initialized) return;
     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this._masterGain = this.ctx.createGain();
+    this._masterGain.gain.value = this.volume;
+    this._masterGain.connect(this.ctx.destination);
     this._initialized = true;
 
     // Decode the embedded audio clip
@@ -35,7 +40,18 @@ export class SoundEngine {
 
   toggleMute() {
     this.muted = !this.muted;
+    if (this._masterGain) {
+      this._masterGain.gain.value = this.muted ? 0 : this.volume;
+    }
     return this.muted;
+  }
+
+  setVolume(v) {
+    this.volume = Math.max(0, Math.min(1, v));
+    if (this._masterGain && !this.muted) {
+      this._masterGain.gain.value = this.volume;
+    }
+    return this.volume;
   }
 
   /**
@@ -59,11 +75,7 @@ export class SoundEngine {
     const source = this.ctx.createBufferSource();
     source.buffer = this._audioBuffer;
 
-    const gain = this.ctx.createGain();
-    gain.gain.value = 0.8;
-
-    source.connect(gain);
-    gain.connect(this.ctx.destination);
+    source.connect(this._masterGain);
 
     source.start(0);
     this._currentSource = source;

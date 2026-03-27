@@ -1,24 +1,25 @@
 import { MESSAGES, MESSAGE_INTERVAL, TOTAL_TRANSITION } from './constants.js';
+import { QuoteFetcher } from './QuoteFetcher.js';
 
 export class MessageRotator {
   constructor(board) {
     this.board = board;
-    this.messages = MESSAGES;
-    this.currentIndex = -1;
+    this.fetcher = new QuoteFetcher();
+    this._history = [];
+    this._historyIndex = -1;
     this._timer = null;
     this._paused = false;
   }
 
   start() {
-    // Show first message immediately
-    this.next();
+    // Seed with static quotes immediately so there's always something to show
+    this.fetcher.setFallback(MESSAGES);
 
-    // Begin auto-rotation
-    this._timer = setInterval(() => {
-      if (!this._paused && !this.board.isTransitioning) {
-        this.next();
-      }
-    }, MESSAGE_INTERVAL + TOTAL_TRANSITION);
+    // Kick off async load of the full quotes file
+    this.fetcher.prefetch();
+
+    this.next();
+    this._startTimer();
   }
 
   stop() {
@@ -29,26 +30,38 @@ export class MessageRotator {
   }
 
   next() {
-    this.currentIndex = (this.currentIndex + 1) % this.messages.length;
-    this.board.displayMessage(this.messages[this.currentIndex]);
-    this._resetAutoRotation();
+    if (this._historyIndex < this._history.length - 1) {
+      this._historyIndex++;
+      this.board.displayMessage(this._history[this._historyIndex]);
+    } else {
+      const msg = this.fetcher.next();
+      if (!msg) return;
+      this._history.push(msg);
+      this._historyIndex = this._history.length - 1;
+      this.board.displayMessage(msg);
+    }
   }
 
   prev() {
-    this.currentIndex = (this.currentIndex - 1 + this.messages.length) % this.messages.length;
-    this.board.displayMessage(this.messages[this.currentIndex]);
-    this._resetAutoRotation();
+    if (this._historyIndex > 0) {
+      this._historyIndex--;
+      this.board.displayMessage(this._history[this._historyIndex]);
+      this._resetAutoRotation();
+    }
+  }
+
+  _startTimer() {
+    this._timer = setInterval(() => {
+      if (!this._paused && !this.board.isTransitioning) {
+        this.next();
+      }
+    }, MESSAGE_INTERVAL + TOTAL_TRANSITION);
   }
 
   _resetAutoRotation() {
-    // Reset timer when user manually navigates
     if (this._timer) {
       clearInterval(this._timer);
-      this._timer = setInterval(() => {
-        if (!this._paused && !this.board.isTransitioning) {
-          this.next();
-        }
-      }, MESSAGE_INTERVAL + TOTAL_TRANSITION);
+      this._startTimer();
     }
   }
 }
