@@ -48,6 +48,7 @@ export class ClockMode {
     const dateLine = `${day} ${date} ${month} ${year}`;  // e.g. "FRI 27 MAR 2026" (15 chars)
     const timeLine = `${h}:${m} ${ampm}`;                // e.g. "10:45 PM" (8 chars)
 
-    this.board.displayMessage(['', dateLine, '', timeLine, '']);
+    const onTheHour = now.getMinutes() === 0;
+    this.board.displayMessage(['', dateLine, '', timeLine, ''], { silent: !onTheHour });
   }
 }

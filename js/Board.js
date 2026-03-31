@@ -95,7 +95,7 @@ export class Board {
     });
   }
 
-  displayMessage(lines) {
+  displayMessage(lines, { silent = false } = {}) {
     if (this.isTransitioning) return;
     this.isTransitioning = true;
 
@@ -119,7 +119,7 @@ export class Board {
     }
 
     // Play the single transition audio clip once
-    if (hasChanges && this.soundEngine) {
+    if (hasChanges && !silent && this.soundEngine) {
       this.soundEngine.playTransition();
     }
 

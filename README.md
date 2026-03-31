@@ -67,7 +67,7 @@ Pressing `↑` (D-pad up on Android TV), `C`, or the Clock button in the panel o
           10:45 PM
 ```
 
-The board flips exactly on the minute. Press the same button again to return to quotes.
+The board flips exactly on the minute. The flip sound only plays on the hour. Press the same button again to return to quotes.
 
 ## Customisation
 
@@ -94,7 +94,7 @@ Edit `js/constants.js`:
 
 | Constant | Default | Description |
 |----------|---------|-------------|
-| `MESSAGE_INTERVAL` | `600000` (10 min) | How long each quote is displayed |
+| `MESSAGE_INTERVAL` | `600000` | How long each quote is displayed (10 minutes) |
 | `SCRAMBLE_DURATION` | `800` | Duration of the scramble animation (ms) |
 | `STAGGER_DELAY` | `25` | Per-tile stagger delay (ms) |
 | `GRID_COLS` / `GRID_ROWS` | `22` / `5` | Board dimensions |
