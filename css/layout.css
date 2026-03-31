@@ -89,6 +89,17 @@ body {
   color: #f77e7e;
 }
 
+/* Night / dim mode */
+body.dim .board {
+  filter: brightness(0.25);
+  transition: filter 2s ease;
+}
+
+body:not(.dim) .board {
+  filter: brightness(1);
+  transition: filter 2s ease;
+}
+
 .page-frame {
   width: 100%;
   min-height: 100vh;

@@ -27,7 +27,7 @@ function wordWrap(text, maxWidth) {
   return lines;
 }
 
-function formatQuote(text, author) {
+export function formatQuote(text, author) {
   const lines = wordWrap(sanitize(text), GRID_COLS);
   const attribution = sanitize('- ' + author).slice(0, GRID_COLS);
   if (lines.length <= 1) {

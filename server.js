@@ -59,7 +59,9 @@ const server = http.createServer((req, res) => {
         if (cmd === 'vol-down') state.volume = Math.max(0, +(state.volume - 0.1).toFixed(1));
 
         // Broadcast command to all clients (TV executes it, remote reflects state)
-        broadcast('cmd', { cmd });
+        // Custom messages carry extra payload; all others just send { cmd }
+        const { text } = JSON.parse(body);
+        broadcast('cmd', cmd === 'custom' ? { cmd, text } : { cmd });
         broadcast('state', state);
 
         res.writeHead(200);

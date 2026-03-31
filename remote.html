@@ -70,9 +70,8 @@
       stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
     }
 
-    /* Active states */
-    .btn.active          { background: #0a3060; color: #7eb8f7; }
-    .btn.muted           { background: #2a1010; color: #f77e7e; }
+    .btn.active { background: #0a3060; color: #7eb8f7; }
+    .btn.muted  { background: #2a1010; color: #f77e7e; }
 
     /* Volume row */
     .vol-row {
@@ -91,12 +90,54 @@
       color: rgba(255,255,255,0.5);
     }
 
+    /* Custom message row */
+    .custom-row {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .custom-row input {
+      flex: 1;
+      padding: 14px 16px;
+      background: #1e1e1e;
+      border: none;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .custom-row input::placeholder { color: rgba(255,255,255,0.25); }
+
+    .custom-row button {
+      padding: 14px 20px;
+      background: #1e1e1e;
+      border: none;
+      border-radius: 14px;
+      color: rgba(255,255,255,0.6);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .custom-row button:active { opacity: 0.6; }
+    .custom-row button.sent   { background: #0a3060; color: #7eb8f7; }
+
     .status {
       font-size: 12px;
       color: rgba(255,255,255,0.2);
       text-align: center;
     }
-    .status.connected { color: #00cc88; }
+    .status.connected    { color: #00cc88; }
+    .status.reconnecting { color: #f7c97e; }
   </style>
 </head>
 <body>
@@ -144,32 +185,40 @@
     </button>
   </div>
 
+  <div class="section-label">Custom Message</div>
+  <div class="custom-row">
+    <input id="custom-input" type="text" maxlength="66" placeholder="Type a message…" autocomplete="off">
+    <button id="custom-send">Send</button>
+  </div>
+
   <p class="status" id="status">Connecting...</p>
 
   <script>
-    const statusEl  = document.getElementById('status');
-    const btnClock  = document.getElementById('btn-clock');
-    const btnMute   = document.getElementById('btn-mute');
-    const muteLabel = document.getElementById('mute-label');
-    const iconSound = document.getElementById('icon-sound');
-    const iconMuted = document.getElementById('icon-muted');
+    const statusEl   = document.getElementById('status');
+    const btnClock   = document.getElementById('btn-clock');
+    const btnMute    = document.getElementById('btn-mute');
+    const muteLabel  = document.getElementById('mute-label');
+    const iconSound  = document.getElementById('icon-sound');
+    const iconMuted  = document.getElementById('icon-muted');
     const volDisplay = document.getElementById('vol-display');
+    const customInput = document.getElementById('custom-input');
+    const customSend  = document.getElementById('custom-send');
 
     function applyState(state) {
       btnClock.classList.toggle('active', state.clock);
-      btnMute.classList.toggle('muted', state.muted);
+      btnMute.classList.toggle('muted',   state.muted);
       iconSound.style.display = state.muted ? 'none' : '';
       iconMuted.style.display = state.muted ? '' : 'none';
       muteLabel.textContent   = state.muted ? 'Muted' : 'Sound';
       volDisplay.textContent  = Math.round(state.volume * 100) + '%';
     }
 
-    async function send(cmd) {
+    async function send(cmd, extra = {}) {
       try {
         await fetch('/command', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cmd }),
+          body: JSON.stringify({ cmd, ...extra }),
         });
       } catch {
         statusEl.textContent = 'Lost connection';
@@ -181,16 +230,47 @@
       btn.addEventListener('click', () => send(btn.dataset.cmd));
     });
 
-    const es = new EventSource('/events');
-    es.onopen = () => {
-      statusEl.textContent = 'Connected';
-      statusEl.className = 'status connected';
-    };
-    es.onerror = () => {
-      statusEl.textContent = 'Disconnected';
-      statusEl.className = 'status';
-    };
-    es.addEventListener('state', (e) => applyState(JSON.parse(e.data)));
+    customSend.addEventListener('click', () => {
+      const text = customInput.value.trim();
+      if (!text) return;
+      send('custom', { text });
+      customInput.value = '';
+      customSend.classList.add('sent');
+      customSend.textContent = 'Sent!';
+      setTimeout(() => {
+        customSend.classList.remove('sent');
+        customSend.textContent = 'Send';
+      }, 2000);
+    });
+
+    customInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') customSend.click();
+    });
+
+    // SSE with auto-reconnect + exponential backoff
+    let reconnectDelay = 1000;
+
+    function connectSSE() {
+      const es = new EventSource('/events');
+
+      es.onopen = () => {
+        reconnectDelay = 1000;
+        statusEl.textContent = 'Connected';
+        statusEl.className = 'status connected';
+      };
+
+      es.onerror = () => {
+        es.close();
+        statusEl.textContent = 'Reconnecting…';
+        statusEl.className = 'status reconnecting';
+        setTimeout(connectSSE, reconnectDelay);
+        reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+      };
+
+      es.addEventListener('state', (e) => applyState(JSON.parse(e.data)));
+    }
+
+    connectSSE();
   </script>
 </body>
 </html>
